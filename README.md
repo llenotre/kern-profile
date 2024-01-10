@@ -1,4 +1,4 @@
-This tool allows to profile the CPU usage of a Rust kernel running in QEMU, using flamegraphs.
+This tool allows profiling of the CPU usage of a Rust kernel running in QEMU, using flamegraphs.
 
 It works by sampling the execution of the code at a given rate.
 For each sample, the plugin collects the current callstack of the code being executed.
@@ -8,8 +8,8 @@ The assumption is made that more time the CPU spends executing a function, the h
 Aggregating all the callstacks together allows to build the flamegraph.
 
 The repository contains the following components:
-- a QEMU TCG plugin (written in C) for data acquisition
-- an aggregator (written in Rust) to convert the data into a form that can be processed by `flamegraph.pl`
+- a QEMU TCG plugin for data acquisition (written in C)
+- an aggregator to convert the data into a form that can be processed by `flamegraph.pl` (written in Rust)
 
 
 
@@ -28,7 +28,7 @@ The following programs are required:
 Build the QEMU plugin using:
 
 ```sh
-QEMU_SRC=<path to QEMU sources> make
+QEMU_SRC=<source to QEMU> make
 ```
 
 Then, build the aggregator:
@@ -41,22 +41,18 @@ cargo build --release
 
 ## Usage
 
-First, make sure the kernel is compiled with the `-Cforce-frame-pointers=yes` option on `rustc`.
-
 Run QEMU with the plugin by adding the following argument (adapt parameters to your needs):
 
 ```sh
--plugin 'kern-profile.so,out=raw-data,delay=10'
+-plugin 'kern-profile.so,out=raw_data,delay=10'
 ```
 
-Arguments:
-- `out` is the path to the output file
-- `delay` (optional) is the amount of microseconds between each sample
+This will acquire data from QEMU until exiting and write the output to `raw_data`. The `delay` parameter is the amount of microseconds between each sample.
 
 The output file can then be processed by the aggregator:
 
 ```sh
-target/release/kern-profile raw-data <path to kernel ELF> flamegraph-input
+kern-profile raw_data <path-to-kernel-ELF> flamegraph-input
 ```
 
 Then, you can generate the flamegraph with:
@@ -72,4 +68,3 @@ cat flamegraph-input | flamegraph.pl >flamegraph.svg
 The following issues need to be fixed in the future:
 - Only one CPU core is supported
 - Only x86 in 32 bits is supported
-- The plugin does not allow to generate [memory flamegraphs](https://www.brendangregg.com/FlameGraphs/memoryflamegraphs.html)
